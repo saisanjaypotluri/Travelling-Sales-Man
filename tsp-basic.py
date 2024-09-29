@@ -1,43 +1,56 @@
 import math
 import time
 
-def read_tsp_file(filename):
-    nodes = {}
-    with open(filename, 'r') as f:
-        for line in f:
-            if line.startswith('NODE_COORD_SECTION'):  #this is the basic TSP code, it takes more time to run and not so efficient.
+def read_places_file(filename):
+    places = {}
+    with open(filename, 'r') as file:
+        header = file.readline()  # Read and ignore the first line (headers)
+        for line in file:
+            if line.startswith('END'):
                 break
-        for line in f:
-            if line.startswith('EOF'):
-                break
-            node_id, x, y = map(int, line.split()[0:3])
-            nodes[node_id] = (x, y)
-    return nodes
+            columns = line.split('\t')
+            if len(columns) < 3:
+                continue  # Skip any malformed lines
+            place_name = columns[0].strip()
+            # Check if latitude and longitude are valid numbers
+            try:
+                latitude = float(columns[1].strip())
+                longitude = float(columns[2].strip())
+            except ValueError:
+                continue  # Skip this line if conversion fails
+            places[place_name] = (latitude, longitude)
+    return places
 
-def distance(node1, node2):
-    x1, y1 = node1
-    x2, y2 = node2
-    return round(math.sqrt((x1-x2)**2 + (y1-y2)**2))
+def calculate_distance(coord1, coord2):
+    # Haversine formula to calculate distance between two latitude-longitude points
+    lat1, lon1 = coord1
+    lat2, lon2 = coord2
+    R = 6371  # Earth radius in kilometers
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return R * c  # Return distance in kilometers
 
-def total_distance(route, nodes):
-    dist = 0
-    for i in range(len(route)-1):
-        dist += distance(nodes[route[i]], nodes[route[i+1]])
-    dist += distance(nodes[route[-1]], nodes[route[0]])
-    return dist
+def calculate_total_distance(route, places):
+    total_dist = 0
+    for i in range(len(route) - 1):
+        total_dist += calculate_distance(places[route[i]], places[route[i + 1]])
+    total_dist += calculate_distance(places[route[-1]], places[route[0]])  # Return to starting point
+    return total_dist
 
-def two_opt(route, nodes):
+def optimize_route(route, places):
     improved = True
     while improved:
         improved = False
-        for i in range(1, len(route)-2):
-            for j in range(i+1, len(route)):
-                if j-i == 1:
+        for i in range(1, len(route) - 2):
+            for j in range(i + 1, len(route)):
+                if j - i == 1:
                     continue
                 new_route = route[:]
-                new_route[i:j] = route[j-1:i-1:-1]
-                new_distance = total_distance(new_route, nodes)
-                if new_distance < total_distance(route, nodes):
+                new_route[i:j] = reversed(route[i:j])  # Reverse the segment
+                new_distance = calculate_total_distance(new_route, places)
+                if new_distance < calculate_total_distance(route, places):
                     route = new_route
                     improved = True
         if improved:
@@ -45,12 +58,12 @@ def two_opt(route, nodes):
     return route
 
 if __name__ == '__main__':
-    nodes = read_tsp_file('att532.tsp')
+    places = read_places_file('project_dataset.txt')
     start_time = time.time()
-    initial_route = list(nodes.keys())
-    best_route = two_opt(initial_route, nodes)
+    initial_route = list(places.keys())
+    best_route = optimize_route(initial_route, places)
     end_time = time.time()
     execution_time = end_time - start_time
     print('Best route found:', best_route)
-    print('Total distance:', total_distance(best_route, nodes))
+    print('Total distance:', calculate_total_distance(best_route, places))
     print("Execution time:", execution_time)
