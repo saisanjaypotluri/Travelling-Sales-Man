@@ -69,17 +69,72 @@ def read_state_data(filename):
                 continue  # Skipping invalid lines
             state_coordinates[state_name] = (latitude, longitude)  # Dictionary with state names and coordinates
     return state_coordinates
+# 2-opt swap to improve the tour
+def two_opt(tour, state_coordinates):
+    best_tour = tour[:]
+    best_distance = calculate_tour_distance(best_tour, state_coordinates)
+    improved = True
+    
+    while improved:
+        improved = False
+        for i in range(1, len(tour) - 1):
+            for j in range(i + 1, len(tour)):
+                if j - i == 1:  # Skip adjacent nodes, no point in swapping them
+                    continue
+                new_tour = best_tour[:]
+                # Reverse the segment between i and j to create a new tour
+                new_tour[i:j] = best_tour[j-1:i-1:-1]
+                
+                new_distance = calculate_tour_distance(new_tour, state_coordinates)
+                if new_distance < best_distance:
+                    best_tour = new_tour
+                    best_distance = new_distance
+                    improved = True
+    return best_tour, best_distance
+
+# Helper function to calculate the total distance of a tour
+def calculate_tour_distance(tour, state_coordinates):
+    total_distance = 0
+    for i in range(len(tour) - 1):
+        total_distance += calculate_state_distance(tour[i], tour[i+1], state_coordinates)
+    total_distance += calculate_state_distance(tour[-1], tour[0], state_coordinates) 
+    # Return to the starting point
+    return total_distance
+
+# Function for reading dataset
+def read_state_data(filename):
+    state_coordinates = {}
+    with open(filename, 'r') as f:
+        next(f)  # Skipping header
+        for line in f:
+            if line.startswith('END'):
+                break
+            parts = line.strip().split()
+            if len(parts) < 3:
+                continue
+            state_name = ' '.join(parts[:-2]).strip().lower()      # Lowercase for uniformity
+            try:
+                latitude = float(parts[-2].strip())
+                longitude = float(parts[-1].strip())
+            except ValueError:
+                continue  # Skipping invalid lines
+            state_coordinates[state_name] = (latitude, longitude)  # Dictionary with state names and coordinates
+    return state_coordinates
 
 # Reading dataset
-state_coordinates = read_state_data('/Users/vinoothnadudam/Documents/GitHub/Travelling-Sales-Man/project_dataset.txt')
+state_coordinates = read_state_data('project_dataset.txt')
 
 # Solving TSP problem using the Nearest Neighbor Algorithm
 start_time = time.time()
-tour, cost = solve_tsp_problem(state_coordinates)
-end_time = time.time()
-execution_time = end_time - start_time
+initial_tour, initial_cost = solve_tsp_problem(state_coordinates)
+print('Initial Tour (Nearest Neighbor):', initial_tour)
+print('Initial Total Distance:', initial_cost)
 
-# Printing optimal tour and total distance
-print('Optimal Tour:', tour)
-print('Total Distance:', cost)
-print("Execution time:", execution_time)
+# Applying 2-opt optimization to improve the tour
+optimized_tour, optimized_cost = two_opt(initial_tour, state_coordinates)
+end_time = time.time()
+
+# Printing optimized tour and total distance
+print('Optimized Tour (2-opt):', optimized_tour)
+print('Optimized Total Distance:', optimized_cost)
+print("Execution time:", end_time - start_time)
