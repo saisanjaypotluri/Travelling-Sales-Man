@@ -50,38 +50,6 @@ def solve_tsp_problem(state_coordinates):
     total_distance += calculate_state_distance(current_state, visited_states[0], state_coordinates)
     return visited_states, total_distance
 
-# 2-opt swap to improve the tour
-def two_opt(tour, state_coordinates):
-    best_tour = tour[:]
-    best_distance = calculate_tour_distance(best_tour, state_coordinates)
-    improved = True
-    
-    while improved:
-        improved = False
-        for i in range(1, len(tour) - 1):
-            for j in range(i + 1, len(tour)):
-                if j - i == 1:  # Skip adjacent nodes, no point in swapping them
-                    continue
-                new_tour = best_tour[:]
-                # Reverse the segment between i and j to create a new tour
-                new_tour[i:j] = best_tour[j-1:i-1:-1]
-                
-                new_distance = calculate_tour_distance(new_tour, state_coordinates)
-                if new_distance < best_distance:
-                    best_tour = new_tour
-                    best_distance = new_distance
-                    improved = True
-    return best_tour, best_distance
-
-# Helper function to calculate the total distance of a tour
-def calculate_tour_distance(tour, state_coordinates):
-    total_distance = 0
-    for i in range(len(tour) - 1):
-        total_distance += calculate_state_distance(tour[i], tour[i+1], state_coordinates)
-    total_distance += calculate_state_distance(tour[-1], tour[0], state_coordinates) 
-    # Return to the starting point
-    return total_distance
-
 # Function for reading dataset
 def read_state_data(filename):
     state_coordinates = {}
