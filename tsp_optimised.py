@@ -1,3 +1,4 @@
+
 import math
 import time
 import gc
@@ -71,15 +72,15 @@ def read_state_data(filename):
     return state_coordinates
 
 # Reading dataset
-state_coordinates = read_state_data('project_dataset.txt')
+state_coordinates = read_state_data('/Users/vinoothnadudam/Documents/GitHub/Travelling-Sales-Man/project_dataset.txt')
 
 # Solving TSP problem using the Nearest Neighbor Algorithm
 start_time = time.time()
-initial_tour, initial_cost = solve_tsp_problem(state_coordinates)
-print('Initial Tour (Nearest Neighbor):', initial_tour)
-print('Initial Total Distance:', initial_cost)
-
+tour, cost = solve_tsp_problem(state_coordinates)
 end_time = time.time()
+execution_time = end_time - start_time
 
-# Printing optimized tour and total distance
-print("Execution time:", end_time - start_time)
+# Printing optimal tour and total distance
+print('Optimal Tour:', tour)
+print('Total Distance:', cost)
+print("Execution time:", execution_time)
