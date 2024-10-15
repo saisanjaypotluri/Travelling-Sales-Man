@@ -70,26 +70,6 @@ def read_state_data(filename):
             state_coordinates[state_name] = (latitude, longitude)  # Dictionary with state names and coordinates
     return state_coordinates
 
-# Function for reading dataset
-def read_state_data(filename):
-    state_coordinates = {}
-    with open(filename, 'r') as f:
-        next(f)  # Skipping header
-        for line in f:
-            if line.startswith('END'):
-                break
-            parts = line.strip().split()
-            if len(parts) < 3:
-                continue
-            state_name = ' '.join(parts[:-2]).strip().lower()      # Lowercase for uniformity
-            try:
-                latitude = float(parts[-2].strip())
-                longitude = float(parts[-1].strip())
-            except ValueError:
-                continue  # Skipping invalid lines
-            state_coordinates[state_name] = (latitude, longitude)  # Dictionary with state names and coordinates
-    return state_coordinates
-
 # Reading dataset
 state_coordinates = read_state_data('project_dataset.txt')
 
