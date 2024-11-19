@@ -22,12 +22,13 @@ def read_state_data(filename):
     return state_coordinates
 
 def calculate_haversine_distance(lat1, lon1, lat2, lon2):
-    lat1_rad, lon1_rad, lat2_rad, lon2_rad = map(math.radians, [lat1, lon1, lat2, lon2])
-    dlat = lat2_rad - lat1_rad
-    dlon = lon2_rad - lon1_rad
-    a = math.sin(dlat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon / 2) ** 2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-    return round(6371.0 * c)  # Earth's radius in kilometers
+    R = 6371  # Earth's radius in kilometers
+    lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    return round(R * c)
 
 def calculate_route_distance(route, state_coordinates):
     total_distance = 0
@@ -54,11 +55,15 @@ def solve_tsp_exhaustive(state_coordinates):
 
 if __name__ == "__main__":
     state_coordinates = read_state_data('project_dataset.txt')
+    
+    # Limit the number of cities for feasible computation
+    num_cities = 10  # Adjust this number based on your computational capacity
+    limited_state_coordinates = dict(list(state_coordinates.items())[:num_cities])
 
     start_time = time.time()
-    optimal_route, optimal_distance = solve_tsp_exhaustive(state_coordinates)
+    optimal_route, optimal_distance = solve_tsp_exhaustive(limited_state_coordinates)
     end_time = time.time()
 
-    print("Optimal Route:", optimal_route)
+    print(f"Optimal Route for {num_cities} cities:", optimal_route)
     print("Total Distance:", optimal_distance, "km")
     print("Execution Time:", end_time - start_time, "seconds")
